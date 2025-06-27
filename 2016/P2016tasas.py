@@ -24,6 +24,12 @@ def media_ponderada(valores, pesos):
 carpeta_individual = os.path.join(carpeta_raiz, "individual")
 carpeta_hogar = os.path.join(carpeta_raiz, "hogar")
 
+nombres_trimestres_legibles = {
+    "usu_individual_t216.txt": "2016-T2",
+    "usu_individual_t316.txt": "2016-T3",
+    "usu_individual_t416.txt": "2016-T4",
+}
+
 archivos_txt = sorted(f for f in os.listdir(carpeta_individual) if f.endswith(".txt"))
 
 for nombre_archivo in archivos_txt:
@@ -58,7 +64,7 @@ for nombre_archivo in archivos_txt:
     df_nea["es_desocupado"] = (df_nea["ESTADO"] == 2).astype(int)
 
     # Nombre de trimestre (sin .txt)
-    trimestre = nombre_archivo.replace(".txt", "")
+    trimestre = nombres_trimestres_legibles.get(nombre_archivo, nombre_archivo.replace(".txt", ""))
 
     # Calcular y guardar tasas
     tasas_por_trimestre[trimestre] = {
@@ -114,7 +120,7 @@ for columna in df_tasas.columns:
 
 plt.xticks(rotation=45)
 plt.ylabel("Tasa (%)")
-plt.title("Evolución de tasas en el NEA (EPH 2016 en adelante)")
+plt.title("Evolución de las tasas en la región NEA de 2016")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()

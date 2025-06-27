@@ -106,16 +106,16 @@ df_tasas = df_tasas.sort_values("orden").drop(columns="orden")
 
 # Graficar
 plt.figure(figsize=(16, 6))
-# plt.figure(figsize=(12, 6)) # Descomentar si se quiere ver año por año 
+# plt.figure(figsize=(12, 6)) # Descomentar si se quiere ver año por año y comentar la linea 108
 for columna in df_tasas.columns:
     plt.plot(df_tasas.index, df_tasas[columna], marker='o', label=columna)
 
 plt.xticks(rotation=60)
 # plt.xticks(ticks=range(0, len(df_tasas.index), 4), 
-#         labels=[df_tasas.index[i] for i in range(0, len(df_tasas.index), 4)],    # Descomentar si se quiere ver año por año
+#         labels=[df_tasas.index[i] for i in range(0, len(df_tasas.index), 4)],    # Descomentar si se quiere ver año por año y comentar la linea 113
 #         rotation=60)
 plt.ylabel("Tasa (%)")
-plt.title("Evolución de tasas de Actividad, Empleo y Desocupación (NEA 2016–2024)")
+plt.title("Evolución de tasas de Actividad, Empleo y Desocupación (NEA 2016-2024)")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()

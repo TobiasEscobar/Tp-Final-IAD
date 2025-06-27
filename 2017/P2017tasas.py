@@ -20,9 +20,16 @@ def media_ponderada(valores, pesos):
     media = np.average(valores, weights=pesos)
     return {"media": round(media * 100, 2)}
 
-# Archivos de la carpeta 'individual'
+
 carpeta_individual = os.path.join(carpeta_raiz, "individual")
 carpeta_hogar = os.path.join(carpeta_raiz, "hogar")
+
+nombres_trimestres_legibles = {
+    "usu_individual_t117.txt": "2017-T1",
+    "usu_individual_t217.txt": "2017-T2",
+    "usu_individual_t317.txt": "2017-T3",
+    "usu_individual_t417.txt": "2017-T4",
+}
 
 archivos_txt = sorted(f for f in os.listdir(carpeta_individual) if f.endswith(".txt"))
 
@@ -53,7 +60,7 @@ for nombre_archivo in archivos_txt:
     df_nea["es_ocupado"] = (df_nea["ESTADO"] == 1).astype(int)
     df_nea["es_desocupado"] = (df_nea["ESTADO"] == 2).astype(int)
 
-    trimestre = nombre_archivo.replace(".txt", "")
+    trimestre = nombres_trimestres_legibles.get(nombre_archivo, nombre_archivo.replace(".txt", ""))
 
     tasas_por_trimestre[trimestre] = {
         "actividad": media_ponderada(df_nea["es_activo"], df_nea["PONDERA"]),
@@ -92,11 +99,11 @@ df_tasas = pd.DataFrame({
 def ordenar_trimestres(tri_str):
     # Extraer año y trimestre como enteros
     if tri_str.startswith("usu_individual_t"):
-        tri = int(tri_str[17])  # ej: 1, 2, 3 o 4
-        anio = int("20" + tri_str[18:20])  # ej: 2016, 2017...
+        tri = int(tri_str[17])  
+        anio = int("20" + tri_str[18:20])  
         return anio * 10 + tri
     else:
-        return 0  # por si el nombre no es esperado
+        return 0  
 
 df_tasas["orden"] = df_tasas.index.map(ordenar_trimestres)
 df_tasas = df_tasas.sort_values("orden").drop(columns="orden")
@@ -108,7 +115,7 @@ for columna in df_tasas.columns:
 
 plt.xticks(rotation=45)
 plt.ylabel("Tasa (%)")
-plt.title("Evolución de tasas en el NEA (EPH 2016 en adelante)")
+plt.title("Evolución de las tasas en la región NEA de 2017")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
