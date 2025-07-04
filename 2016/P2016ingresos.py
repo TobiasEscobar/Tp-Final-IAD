@@ -52,7 +52,6 @@ def mediana_ponderada(valores, pesos):
 # Función para resumen de estadísticas ponderadas
 def resumen_ponderado(valores, pesos):
 
-    # Asegurar que son arrays numpy
     valores = np.array(valores)
     pesos = np.array(pesos)
 
@@ -141,7 +140,6 @@ for trimestre, datos in estadisticas.items():
         print(f"{clave}: {valor}")
 
     print("\n" + "=" * 50 + "\n")
-
 
 
 
