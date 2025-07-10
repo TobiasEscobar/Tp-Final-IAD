@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 from funcionesAuxiliares import *
 from ipc_trimestral import *
 
+import matplotlib.colors
+import geopandas as gpd
+from shapely.geometry import Point, LineString, Polygon
+
 
 def mostrar_menu():
     print("\n=== Menú de Análisis de la EPH ===")
@@ -138,6 +142,7 @@ def analizar_ingresos(anio):
     }
 
     resultados_por_trimestre = {}
+    medias_ajustadas = {"P21": {}, "P47T": {}}
 
     def mediana_ponderada(valores, pesos):
         orden = np.argsort(valores)
@@ -158,12 +163,10 @@ def analizar_ingresos(anio):
 
         media = np.average(valores, weights=pesos)
 
-        minimo = valores.min()
         maximo = valores.max()
 
         return {
             "media": media,
-            "min": minimo,
             "max": maximo
         }
 
@@ -202,9 +205,12 @@ def analizar_ingresos(anio):
         
         ingreso_nominal_p21 = datos["P21"]["media"]
         ingreso_ajustado_p21 = ingreso_nominal_p21 / ipc_actual
+
+        medias_ajustadas["P21"][trimestre] = ingreso_ajustado_p21
         print(f"Ajustado por IPC (base 2T2016): {ingreso_ajustado_p21:.2f}")
 
-        
+
+
         cambio_real_p21 = ((ingreso_ajustado_p21 - ingreso_base_p21) / ingreso_base_p21) * 100
         print(f"Cambio real respecto a 2T2016 (P21): {cambio_real_p21:.2f}%")
 
@@ -217,6 +223,8 @@ def analizar_ingresos(anio):
 
         ingreso_nominal_p47t = datos["P47T"]["media"]
         ingreso_ajustado_p47t = ingreso_nominal_p47t / ipc_actual
+
+        medias_ajustadas["P47T"][trimestre] = ingreso_ajustado_p47t
         print(f"Ajustado por IPC (base 2T2016): {ingreso_ajustado_p47t:.2f}")
 
         cambio_real_p47t = ((ingreso_ajustado_p47t - ingreso_base_p47t) / ingreso_base_p47t) * 100
@@ -228,6 +236,7 @@ def analizar_ingresos(anio):
     ############################################## Grafico
 
     medias = {"P21": {}, "P47T": {}}
+    
 
     for trimestre, datos in estadisticas.items():
         for var in ["P21", "P47T"]:
@@ -240,13 +249,31 @@ def analizar_ingresos(anio):
             trim, anio = int(match.group(1)), int(match.group(2))
             return int(f"20{anio}") * 10 + trim
         return 0
+    
+    def mostrar_tabla(serie_nominal, serie_ajustada, ingreso_base):
+        df = pd.DataFrame({
+            "Ingreso Nominal": serie_nominal,
+            "Ingreso Ajustado": serie_ajustada
+        }).sort_index(key=lambda x: [ordenar_trimestres(i) for i in x])
 
-    def graficar_ingreso(titulo, valores_media):
-        df_media = pd.Series(valores_media).sort_index(key=lambda x: [ordenar_trimestres(i) for i in x])
+        df["Cambio Real (%)"] = ((df["Ingreso Ajustado"] - ingreso_base) / ingreso_base) * 100
+
+        print(df.round(2))
+
+    print("P21: ", mostrar_tabla(medias["P21"], medias_ajustadas["P21"], ingreso_base_p21))
+    print("P47T: ", mostrar_tabla(medias["P47T"], medias_ajustadas["P47T"], ingreso_ajustado_p21))
+    
+
+
+
+    def graficar_comparativo(titulo, serie_nominal, serie_ajustada):
+        serie_nominal = pd.Series(serie_nominal).sort_index(key=lambda x: [ordenar_trimestres(i) for i in x])
+        serie_ajustada = pd.Series(serie_ajustada).sort_index(key=lambda x: [ordenar_trimestres(i) for i in x])
 
         plt.figure(figsize=(12, 6))
-        plt.plot(df_media.index, df_media.values, marker='o', label="Media")
-        plt.title(f"Evolución de {titulo} en la región NEA")
+        plt.plot(serie_nominal.index, serie_nominal.values, marker='o', label="Nominal")
+        plt.plot(serie_ajustada.index, serie_ajustada.values, marker='s', label="Ajustado por IPC")
+        plt.title(f"Evolución de {titulo} (nominal vs. real IPC base 2T2016)")
         plt.ylabel("Monto en pesos")
         plt.xlabel("Trimestre")
         plt.xticks(rotation=45)
@@ -255,8 +282,11 @@ def analizar_ingresos(anio):
         plt.tight_layout()
         plt.show()
 
-    graficar_ingreso("P21 (Ingreso de la ocupación principal)", medias["P21"])
-    graficar_ingreso("P47T (Ingreso total individual)", medias["P47T"])
+    print("Medias ajustadas P21:", medias_ajustadas["P21"])
+    print("Medias ajustadas P47T:", medias_ajustadas["P47T"])
+
+    graficar_comparativo("P21 (Ingreso de la ocupación principal)", medias["P21"], medias_ajustadas["P21"])
+    graficar_comparativo("P47T (Ingreso total individual)", medias["P47T"], medias_ajustadas["P47T"])
 
 
 def graficar_evolucion_tasas():
