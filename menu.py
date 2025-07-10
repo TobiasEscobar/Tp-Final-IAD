@@ -5,6 +5,7 @@ import numpy as np
 from scipy.stats import gmean, trim_mean, skew
 import matplotlib.pyplot as plt
 from funcionesAuxiliares import *
+from ipc_trimestral import *
 
 
 def mostrar_menu():
@@ -129,6 +130,8 @@ def analizar_ingresos(anio):
 
     estadisticas = {}
 
+    nombre_archivos = transformar_nombres(anio)
+
     ponderadores = {
         "P21": "PONDIIO",
         "P47T": "PONDII"
@@ -172,7 +175,8 @@ def analizar_ingresos(anio):
             if "REGION" in df.columns and "CH06" in df.columns:
                 df_nea = df[(df["REGION"] == 41) & (df["CH06"] >= 14)]
 
-                trimestre = archivo.replace(".txt", "")
+                trimestre = nombre_archivos.get(archivo, archivo.replace(".txt", ""))
+                #trimestre = archivo.replace(".txt", "")
 
                 estadisticas[trimestre] = {}
 
@@ -182,7 +186,9 @@ def analizar_ingresos(anio):
                         df_var = df_nea[(df_nea[variable] != -9)].dropna(subset=[variable, ponderador])
                         resultado = resumen_ponderado(df_var[variable], df_var[ponderador])
                         estadisticas[trimestre][variable] = resultado
-
+    
+    ingreso_base_p21 = 3553.57
+    ingreso_base_p47t = 5130.26
 
     for trimestre, datos in estadisticas.items():
         print(f"\nResultados del archivo: {trimestre}")
@@ -192,11 +198,29 @@ def analizar_ingresos(anio):
         for clave, valor in datos["P21"].items():
             print(f"{clave}: {valor}")
 
+        ipc_actual = ipc_acumulado.get(trimestre, 1.0)
+        
+        ingreso_nominal_p21 = datos["P21"]["media"]
+        ingreso_ajustado_p21 = ingreso_nominal_p21 / ipc_actual
+        print(f"Ajustado por IPC (base 2T2016): {ingreso_ajustado_p21:.2f}")
+
+        
+        cambio_real_p21 = ((ingreso_ajustado_p21 - ingreso_base_p21) / ingreso_base_p21) * 100
+        print(f"Cambio real respecto a 2T2016 (P21): {cambio_real_p21:.2f}%")
+
+
         print("\n" + "-" * 50)
 
         print("P47T (Ingreso total individual):")
         for clave, valor in datos["P47T"].items():
             print(f"{clave}: {valor}")
+
+        ingreso_nominal_p47t = datos["P47T"]["media"]
+        ingreso_ajustado_p47t = ingreso_nominal_p47t / ipc_actual
+        print(f"Ajustado por IPC (base 2T2016): {ingreso_ajustado_p47t:.2f}")
+
+        cambio_real_p47t = ((ingreso_ajustado_p47t - ingreso_base_p47t) / ingreso_base_p47t) * 100
+        print(f"Cambio real respecto a 2T2016 (P47T): {cambio_real_p47t:.2f}%")
 
         print("\n" + "=" * 50 + "\n")
 
