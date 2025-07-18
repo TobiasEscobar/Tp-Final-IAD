@@ -1,0 +1,383 @@
+import os
+#from sklearn.linear_model import LinearRegression
+import statsmodels.api as sm
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
+import seaborn as sns
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from funcionesAuxiliares import *
+
+# #############
+ipc_dict = {
+    2016: 1.000000,
+    2017: 1.249703,
+    2018: 1.845080,
+    2019: 2.843991,
+    2020: 3.921591,
+    2021: 5.900958,
+    2022: 11.458755,
+    2023: 35.848439,
+    2024: 76.872760
+}
+# #############
+
+
+####### Base de todo
+# anio = 2023
+# trimestre = 1
+# df = elegir_archivo(anio,trimestre)
+
+# aglomerados_permitidos = [7, 8, 12, 15]
+# df_filtrado = df[df["AGLOMERADO"].isin(aglomerados_permitidos)].copy()
+
+# # 2. Deflactamos ingreso laboral P21
+# df_filtrado = df_filtrado[df_filtrado["P21"].notna() & (df_filtrado["P21"] > 0)].copy()
+# df_filtrado["P21_deflactado"] = df_filtrado["P21"] / ipc_dict[anio]
+
+
+# # 3. Variables predictoras (X) e ingreso deflactado (y)
+# X = df_filtrado[["NIVEL_ED","CH04", "AGLOMERADO", "PP04G", "PP07G_59"]]
+# y = df_filtrado["P21_deflactado"]
+
+# # 4. División train/test
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# # 5. Entrenamiento
+# modelo = LinearRegression()
+# modelo.fit(X_train, y_train)
+
+# # 6. Evaluación
+# y_pred = modelo.predict(X_test)
+# rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+# print("R2:", r2_score(y_test, y_pred))
+# print("RMSE:", rmse)
+# print("Coeficientes:", modelo.coef_)
+# for var, coef in zip(X.columns, modelo.coef_):
+#     print(f"{var}: {coef:.2f}")
+# print("Intercepto:", modelo.intercept_)
+
+
+# plt.figure(figsize=(8, 8))
+
+# # Scatter plot: valores reales vs predichos
+# plt.scatter(y_test, y_pred, alpha=0.5, edgecolor='k', label='Predicciones')
+
+# # Línea diagonal perfecta (y = x)
+# min_val = min(min(y_test), min(y_pred))
+# max_val = max(max(y_test), max(y_pred))
+# plt.plot([min_val, max_val], [min_val, max_val], color='red', linestyle='--', label='Perfecto ajuste')
+
+# plt.xlabel('Valores reales (P21 deflactado)')
+# plt.ylabel('Valores predichos')
+# plt.title('Valores reales vs predichos - Regresión lineal')
+# plt.legend()
+# plt.grid(True)
+# plt.show()
+
+#############################################
+
+
+########### TODOS LOS TRIMESTRES
+# anio = 2024
+# aglomerados_permitidos = [7, 8, 12, 15]
+
+# df_anual = []
+# for trimestre in [1, 2, 3, 4]:
+#     try:
+#         df_t = elegir_archivo(anio, trimestre)
+#         df_t["trimestre"] = trimestre
+#         df_anual.append(df_t)
+#     except Exception as e:
+#         print(f"No se pudo cargar {anio}T{trimestre}: {e}")
+
+# df = pd.concat(df_anual, ignore_index=True)
+
+# # Filtrado y deflactacion
+# df_filtrado = df[
+#     df["AGLOMERADO"].isin(aglomerados_permitidos) &
+#     df["P21"].notna() & (df["P21"] > 0)
+# ].copy()
+
+# df_filtrado["P21_deflactado"] = df_filtrado["P21"] / ipc_dict[anio]
+
+# # Variables del modelo
+# X = df_filtrado[["NIVEL_ED", "CH04", "AGLOMERADO", "PP04G", "PP07G_59"]]
+# y = df_filtrado["P21_deflactado"]
+# w = df_filtrado["PONDIIO"]
+
+# # Division entrenamiento y prueba
+# X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(X, y, w, test_size=0.2, random_state=42)
+
+# # Regresion ponderada (WLS)
+# X_train_const = sm.add_constant(X_train)
+# X_test_const = sm.add_constant(X_test)
+# modelo_wls = sm.WLS(y_train, X_train_const, weights=w_train).fit()
+
+# # Evaluacion
+# y_pred = modelo_wls.predict(X_test_const)
+# rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+# r2 = r2_score(y_test, y_pred)
+
+# print(f"\nResultados para el año {anio} (todos los trimestres)")
+# print("R2:", r2)
+# print("RMSE:", rmse)
+# print("Coeficientes:")
+# for var, coef in zip(X_train_const.columns, modelo_wls.params):
+#     print(f"{var}: {coef:.2f}")
+
+# # Grafico real vs predicho
+# plt.figure(figsize=(8, 8))
+# plt.scatter(y_test, y_pred, alpha=0.5, edgecolor='k', label='Predicciones')
+# min_val = min(min(y_test), min(y_pred))
+# max_val = max(max(y_test), max(y_pred))
+# ajuste_lineal = np.polyfit(y_test, y_pred, 1)  # devuelve coeficientes b, a
+# x_vals = np.linspace(min_val, max_val, 100)
+# y_vals = ajuste_lineal[0] * x_vals + ajuste_lineal[1]
+# plt.plot(x_vals, y_vals, color='red', linestyle='-', label='Regresion')
+# plt.xlabel("Valores reales (P21 deflactado)")
+# plt.ylabel("Valores predichos")
+# plt.title(f"Modelo de regresion para Año {anio} (4 trimestres)")
+# plt.legend()
+# plt.grid(True)
+# plt.show()
+
+
+############################################
+
+
+
+######## PARA UN SOLO TRIMESTRE
+# anio = 2020
+# trimestre = 1
+
+# df = elegir_archivo(anio, trimestre)
+
+# aglomerados_permitidos = [7, 8, 12, 15]
+# df_filtrado = df[
+#     df["AGLOMERADO"].isin(aglomerados_permitidos) &
+#     df["P21"].notna() & (df["P21"] > 0)
+# ].copy()
+
+# # Deflactar ingresos
+# df_filtrado["P21_deflactado"] = df_filtrado["P21"] / ipc_dict[anio]
+
+# # Variables independientes y dependiente
+# X = df_filtrado[["NIVEL_ED", "CH04", "AGLOMERADO", "PP04G", "PP07G_59"]]
+# y = df_filtrado["P21_deflactado"]
+# w = df_filtrado["PONDIIO"]
+
+# # División Train/Test
+# X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(X, y, w, test_size=0.2, random_state=42)
+
+# # Constante para statsmodels
+# X_train_const = sm.add_constant(X_train)
+# X_test_const = sm.add_constant(X_test)
+
+# # Ajustar modelo WLS
+# modelo_wls = sm.WLS(y_train, X_train_const, weights=w_train).fit()
+
+# # Prediccion y evaluacion
+# y_pred = modelo_wls.predict(X_test_const)
+# rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+# r2 = r2_score(y_test, y_pred)
+
+# # Printear resultadoss
+# print("R2:", r2)
+# print("RMSE:", rmse)
+# print("Coeficientes:")
+# for var, coef in zip(X_train_const.columns, modelo_wls.params):
+#     print(f"{var}: {coef:.2f}")
+
+
+# # Grafico: reales vs predichos
+# plt.figure(figsize=(8, 8))
+# plt.scatter(y_test, y_pred, alpha=0.5, edgecolor='k', label='Predicciones')
+# min_val = min(min(y_test), min(y_pred))
+# max_val = max(max(y_test), max(y_pred))
+
+# # Línea de ajuste entre y_test y y_pred 
+# ajuste_lineal = np.polyfit(y_test, y_pred, 1)  # devuelve coeficientes b, a
+# x_vals = np.linspace(min_val, max_val, 100)
+# y_vals = ajuste_lineal[0] * x_vals + ajuste_lineal[1]
+# plt.plot(x_vals, y_vals, color='red', linestyle='-', label='Regresion')
+
+# plt.xlabel("Valores reales (P21 deflactado)")
+# plt.ylabel("Valores predichos")
+# plt.title(f"Modelo de regresion para {anio}T{trimestre}")
+# plt.legend()
+# plt.grid(True)
+# plt.show()
+
+
+# anio = 2020
+# trimestre = 1
+
+# df = elegir_archivo(anio, trimestre)
+
+# aglomerados_permitidos = [7, 8, 12, 15]
+
+# # Filtrar datos
+# df_reg = df[
+#     (df["AGLOMERADO"].isin(aglomerados_permitidos)) &
+#     (df["P21"].notna()) & (df["P21"] > 0) &
+#     (df["NIVEL_ED"].isin(range(1,8)))
+# ].copy()
+
+# # Deflactar ingreso
+# df_reg["P21_deflactado"] = df_reg["P21"] / ipc_dict[anio]
+
+# # Crear variables dummy para NIVEL_ED (tratando nivel 1 como base)
+# X = pd.get_dummies(df_reg["NIVEL_ED"].astype(str), prefix="Nivel", drop_first=True)
+
+# # Variable dependiente y ponderación
+# y = df_reg["P21_deflactado"]
+# w = df_reg["PONDIIO"]
+
+# # Agregar constante para intercepto
+# X_const = sm.add_constant(X)
+
+# # Limpiar NA y convertir a float para evitar errores en statsmodels
+# mask = X_const.notnull().all(axis=1) & y.notnull() & w.notnull()
+# X_const_clean = X_const[mask].astype(float)
+# y_clean = y[mask].astype(float)
+# w_clean = w[mask].astype(float)
+
+# # Ajustar modelo WLS ponderado
+# modelo = sm.WLS(y_clean, X_const_clean, weights=w_clean).fit()
+
+# print(modelo.summary())
+
+# # Predicción para niveles 1 a 7 (como string para las dummies)
+# niveles = [str(i) for i in range(1,8)]
+# X_pred = pd.get_dummies(pd.Series(niveles), prefix="Nivel", drop_first=True)
+# X_pred = sm.add_constant(X_pred, has_constant='add')
+
+# y_pred = modelo.predict(X_pred)
+
+# # Ingreso promedio ponderado observado por NIVEL_ED
+# obs_promedios = df_reg.groupby("NIVEL_ED").apply(
+#     lambda x: np.average(x["P21_deflactado"], weights=x["PONDIIO"])
+# )
+
+# niveles_num = list(range(1,8))  # eje x: 1 a 7
+
+# # Valores reales (promedio ponderado)
+# obs_promedios = df_reg.groupby("NIVEL_ED").apply(
+#     lambda x: np.average(x["P21_deflactado"], weights=x["PONDIIO"])
+# )
+# # Asegurar que están en orden y completos para niveles 1 a 7
+# obs_promedios = obs_promedios.reindex(niveles_num)
+
+# # Valores predichos (modelo)
+# niveles_str = [str(i) for i in niveles_num]
+# X_pred = pd.get_dummies(pd.Series(niveles_str), prefix="Nivel", drop_first=True)
+# X_pred = sm.add_constant(X_pred, has_constant='add')
+# y_pred = modelo.predict(X_pred)
+
+# plt.figure(figsize=(10,6))
+# plt.plot(niveles_num, obs_promedios.values, marker='o', linestyle='-', label='Ingreso Real Promedio')
+# plt.plot(niveles_num, y_pred.values, marker='s', linestyle='--', label='Ingreso Predicho Modelo')
+
+# plt.xticks(niveles_num)
+# plt.xlabel("Nivel de Educación")
+# plt.ylabel("Ingreso Deflactado")
+# plt.title(f"Ingreso Deflactado por Nivel de Educación\n{anio}T{trimestre}")
+# plt.legend()
+# plt.grid(True, axis='y', linestyle='--', alpha=0.7)
+# plt.show()
+
+
+
+
+
+
+
+####################### con escala logaritmica
+# anio = 2024
+# trimestre = 1
+# df = elegir_archivo(anio, trimestre)
+
+# aglomerados_permitidos = [7, 8, 12, 15]
+# df_filtrado = df[
+#     df["AGLOMERADO"].isin(aglomerados_permitidos) &
+#     df["P21"].notna() & (df["P21"] > 0)
+# ].copy()
+
+# # Deflactar ingresos y aplicar log
+# df_filtrado["P21_deflactado"] = df_filtrado["P21"] / ipc_dict[anio]
+# df_filtrado["log_P21_deflactado"] = np.log(df_filtrado["P21_deflactado"])
+
+# # Variables independientes y dependiente
+# X = df_filtrado[["NIVEL_ED", "CH04", "AGLOMERADO", "PP04G", "PP07G_59"]]
+# y = df_filtrado["log_P21_deflactado"]
+# w = df_filtrado["PONDIIO"]
+
+# # División Train/Test
+# X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(X, y, w, test_size=0.2, random_state=42)
+
+# # Agregar constante
+# X_train_const = sm.add_constant(X_train)
+# X_test_const = sm.add_constant(X_test)
+
+# # Ajuste del modelo
+# modelo_log = sm.WLS(y_train, X_train_const, weights=w_train).fit()
+
+# # Predicción (en escala log)
+# y_pred_log = modelo_log.predict(X_test_const)
+
+# # Volver a escala original
+# y_pred = np.exp(y_pred_log)
+# y_real = np.exp(y_test)
+
+# # Evaluación en escala original
+# rmse = np.sqrt(mean_squared_error(y_real, y_pred))
+# r2 = r2_score(y_real, y_pred)
+
+# # Extraer coeficientes (sin el intercepto)
+# coeficientes = modelo_log.params.drop("const")
+
+# # Transformar a porcentaje (aproximado)
+# porcentajes = (np.exp(coeficientes) - 1) * 100
+
+# # Crear DataFrame de resultados
+# tabla_coef = pd.DataFrame({
+#     "Variable": coeficientes.index,
+#     "Coef. Log (β)": coeficientes.values,
+#     "Efecto % estimado": porcentajes.round(2)
+# })
+
+# # Mostrar tabla ordenada
+# print("\n=== Coeficientes del modelo log-lineal ===")
+# print(tabla_coef.to_string(index=False))
+
+# # Mostrar métricas del modelo
+# print(f"\nR² (en escala original): {r2:.4f}")
+# print(f"RMSE (en escala original): {rmse:.2f}")
+# print(f"Intercepto (log): {modelo_log.params['const']:.3f}")
+# print(f"Intercepto (escala original): {np.exp(modelo_log.params['const']):.2f}")
+
+# # === GRAFICO ===
+# plt.figure(figsize=(8, 8))
+# plt.scatter(y_real, y_pred, alpha=0.5, edgecolor='k', label='Predicciones')
+
+# min_val = min(min(y_real), min(y_pred))
+# max_val = max(max(y_real), max(y_pred))
+
+# # Línea de ajuste real entre y_real y y_pred
+# ajuste_lineal = np.polyfit(y_real, y_pred, 1)
+# x_vals = np.linspace(min_val, max_val, 100)
+# y_vals = ajuste_lineal[0] * x_vals + ajuste_lineal[1]
+# plt.plot(x_vals, y_vals, color='red', linestyle='-', label='Regresion')
+
+# plt.xlabel("Valores reales (P21 deflactado)")
+# plt.ylabel("Valores predichos")
+# plt.title(f"Modelo de regresion para {anio}T{trimestre}")
+# plt.legend()
+# plt.grid(True)
+# plt.show()
+

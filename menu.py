@@ -50,7 +50,7 @@ def menu_principal():
 
 def analizar_tasas(anio):
     print(f"\nAnálisis de tasas para {anio}")
-    carpeta_individual = elegir_archivo(anio)
+    carpeta_individual = elegir_archivo2(anio)
 
     aglomerados_nea = [7, 8, 12, 15]
 
@@ -63,7 +63,7 @@ def analizar_tasas(anio):
         return {"media": round(media * 100, 1)} 
 
     # Nombres legibles para los trimestres
-    nombre_archivos = transformar_nombres(anio)
+    nombre_archivos = transformar_nombres2(anio)
 
     archivos_txt = sorted(f for f in os.listdir(carpeta_individual) if f.endswith(".txt"))
 
@@ -130,11 +130,11 @@ def analizar_tasas(anio):
 def analizar_ingresos(anio):
     print(f"\nAnálisis de ingresos para {anio}")
 
-    carpeta = elegir_archivo(anio)
+    carpeta = elegir_archivo2(anio)
 
     estadisticas = {}
 
-    nombre_archivos = transformar_nombres(anio)
+    nombre_archivos = transformar_nombres2(anio)
 
     ponderadores = {
         "P21": "PONDIIO",
